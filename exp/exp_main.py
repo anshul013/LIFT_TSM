@@ -111,11 +111,11 @@ class Exp_Main(Exp_Basic):
         self.model.train()
         return total_loss
 
-    def train(self, setting):
-        train_data, train_loader = self._get_data(flag='train')
-        if not self.args.train_only:
+    def train(self, setting, train_data=None, train_loader=None, vali_data=None, vali_loader=None):
+        if train_data is None:
+            train_data, train_loader = self._get_data(flag='train')
+        if vali_data is None and not self.args.train_only:
             vali_data, vali_loader = self._get_data(flag='val')
-            test_data, test_loader = self._get_data(flag='test')
 
         path = os.path.join(self.args.checkpoints, setting)
         if not os.path.exists(path):
@@ -205,10 +205,8 @@ class Exp_Main(Exp_Basic):
             train_loss = np.average(train_loss)
             if not self.args.train_only:
                 vali_loss = self.vali(vali_data, vali_loader, criterion)
-                test_loss = self.vali(test_data, test_loader, criterion)
-
-                print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(
-                    epoch + 1, train_steps, train_loss, vali_loss, test_loss))
+                print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f}".format(
+                    epoch + 1, train_steps, train_loss, vali_loss))
                 early_stopping(vali_loss, self.model, path)
             else:
                 print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f}".format(
@@ -224,10 +222,12 @@ class Exp_Main(Exp_Basic):
         best_model_path = path + '/' + 'checkpoint.pth'
         self.model.load_state_dict(torch.load(best_model_path))
 
-        return self.model
+        return self.model, train_data, train_loader, vali_data, vali_loader
 
-    def test(self, setting, test=0):
-        test_data, test_loader = self._get_data(flag='test')
+    def test(self, setting, test_data=None, test_loader=None, test=0, target_variate=None):
+        self.phase = 'test'
+        if test_data is None:
+            test_data, test_loader = self._get_data(flag='test')
         
         if test:
             print('loading model')
@@ -291,16 +291,7 @@ class Exp_Main(Exp_Basic):
                 preds.append(pred)
                 trues.append(true)
                 inputx.append(batch_x.detach().cpu().numpy())
-                if i % 20 == 0:
-                    input = batch_x.detach().cpu().numpy()
-                    gt = np.concatenate((input[0, :, -1], true[0, :, -1]), axis=0)
-                    pd = np.concatenate((input[0, :, -1], pred[0, :, -1]), axis=0)
-                    visual(gt, pd, os.path.join(folder_path, str(i) + '.pdf'))
 
-        if self.args.test_flop:
-            test_params_flop((batch_x.shape[1],batch_x.shape[2]))
-            exit()
-            
         preds = np.concatenate(preds, axis=0)
         trues = np.concatenate(trues, axis=0)
         inputx = np.concatenate(inputx, axis=0)
@@ -319,23 +310,18 @@ class Exp_Main(Exp_Basic):
         f.write('\n')
         f.close()
 
-        # np.save(folder_path + 'metrics.npy', np.array([mae, mse, rmse, mape, mspe,rse, corr]))
         np.save(folder_path + 'pred.npy', preds)
-        # np.save(folder_path + 'true.npy', trues)
-        # np.save(folder_path + 'x.npy', inputx)
             
-        #If the model is attention-based -> save the attention weights for further analysis
         if self.args.model == "TSMixerChannelAttention" :
             attention_weights = np.concatenate(attention_weights, axis=0)
             attention_weights = np.array(attention_weights)
-            #Calculate average attention weights over all test instances
             attention_weights = np.average(attention_weights, axis=0)
             np.save(folder_path + 'attention_weights.npy', attention_weights)
             plt.imshow(attention_weights, cmap="hot")
             plt.colorbar()
             plt.savefig(folder_path + 'attention_weights_heat_map.png')
 
-        return
+        return mse, mae, test_data, test_loader
 
     def predict(self, setting, load=False):
         pred_data, pred_loader = self._get_data(flag='pred')
