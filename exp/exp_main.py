@@ -69,8 +69,8 @@ class Exp_Main(Exp_Basic):
                                                       find_unused_parameters=True)
         return model
 
-    def _get_data(self, flag):
-        data_set, data_loader = data_provider(self.args, flag)
+    def _get_data(self, flag, **kwargs):
+        data_set, data_loader = data_provider(self.args, flag, **kwargs)
         return data_set, data_loader
 
     def _select_optimizer(self):

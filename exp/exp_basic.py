@@ -9,7 +9,7 @@ from data_provider.data_factory import data_provider
 from torch import optim
 import torch.nn as nn
 
-from utils.tools import remove_state_key_prefix
+from util.tools import remove_state_key_prefix
 
 
 class Exp_Basic(object):
