@@ -6,7 +6,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 
-class Exp_Lead(Exp_Main):
+class Exp_Lead(Exp_Main_LIFT):
     def __init__(self, args):
         super(Exp_Lead, self).__init__(args)
 

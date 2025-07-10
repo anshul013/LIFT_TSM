@@ -50,8 +50,19 @@ parser.add_argument('--train_only', type=bool, required=False, default=False, he
 parser.add_argument('--wo_test', action='store_true', default=False, help='only valid, not test')
 parser.add_argument('--only_test', action='store_true', default=False)
 parser.add_argument('--model_id', type=str, required=True, default='test', help='model id')
-parser.add_argument('--model', type=str, required=True, default='TSMixer',
-                    help='model name, options: [Autoformer, Informer, Transformer]')
+parser.add_argument('--model', type=str, required=True, default='Autoformer',help='model of the experiment')
+
+# LIFT-specific arguments
+parser.add_argument('--normalization', type=str, default=None, help='normalization method')
+parser.add_argument('--find_unused_parameters', action='store_true', help='find unused parameters in DDP')
+parser.add_argument('--local_rank', type=int, default=-1, help='DDP parameter')
+parser.add_argument('--compile', action='store_true', help='use PyTorch 2.0 compile')
+parser.add_argument('--begin_valid_epoch', type=int, default=0, help='when to begin validation')
+parser.add_argument('--pct_start', type=float, default=0.3, help='percentage of steps with increasing LR')
+parser.add_argument('--tmax', type=int, default=50, help='maximum number of iterations')
+parser.add_argument('--alpha', type=float, default=0.0, help='alpha parameter for normalization')
+parser.add_argument('--wrap_data_class', type=list, default=[], help='data wrapper classes')
+parser.add_argument('--wrap_data_kwargs', type=dict, default={}, help='data wrapper kwargs')
 
 # data loader
 parser.add_argument('--data', type=str, required=True, default='ETTm1', help='dataset type')
