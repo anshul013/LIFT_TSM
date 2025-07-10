@@ -7,6 +7,7 @@ import copy
 import datetime
 import time
 from exp.exp_main import Exp_Main
+from exp.exp_main_l import Exp_Main_LIFT
 from exp.exp_lead import Exp_Lead
 from data_provider import data_loader
 from settings import data_settings
@@ -125,21 +126,22 @@ parser.add_argument('--affine', type=str2bool, default=True, help='define if the
 parser.add_argument('--embedding_dim', type=int, default=128, help="Embedding dimension for models including patch embedding")
 
 # LIFT
-parser.add_argument('--leader_num', type=int, default=4, help='# of leaders')
-parser.add_argument('--state_num', type=int, default=8, help='# of variate states')
-parser.add_argument('--prefetch_path', type=str, default='./prefetch/', help='location of prefetch files that records lead-lag relationships')
-parser.add_argument('--tag', type=str, default='_max')
-parser.add_argument('--prefetch_batch_size', type=int, default=16, help='prefetch_batch_size')
-parser.add_argument('--variable_batch_size', type=int, default=32, help='variable_batch_size')
-parser.add_argument('--max_leader_num', type=int, default=16, help='max # of leaders')
-parser.add_argument('--masked_corr', action='store_true', default=False)
-parser.add_argument('--efficient', type=str_to_bool, default=True)
-parser.add_argument('--pin_gpu', type=str_to_bool, default=True)
-parser.add_argument('--pretrain', action='store_true', default=False)
-parser.add_argument('--freeze', action='store_true', default=False)
-parser.add_argument('--lift', action='store_true', default=False)
-parser.add_argument('--temperature', type=float, default=1.0, help='softmax temperature')
-parser.add_argument('--border_type', type=str, default=None, help='border type for the model')
+parser.add_argument('--leader_num', type=int, default=1, help='Number of leaders')
+parser.add_argument('--state_num', type=int, default=1, help='Number of states')
+parser.add_argument('--prefetch_path', type=str, default='', help='Path to prefetch data')
+parser.add_argument('--tag', type=str, default='_max', help='Tag for prefetch data')
+parser.add_argument('--prefetch_batch_size', type=int, default=16, help='Batch size for prefetch')
+parser.add_argument('--variable_batch_size', type=int, default=32, help='Batch size for variable')
+parser.add_argument('--max_leader_num', type=int, default=16, help='Maximum number of leaders')
+parser.add_argument('--masked_corr', action='store_true', help='Whether to use masked correlation')
+parser.add_argument('--efficient', action='store_true', help='Whether to use efficient implementation')
+parser.add_argument('--pin_gpu', action='store_true', help='Whether to pin GPU memory')
+parser.add_argument('--pretrain', action='store_true', help='Whether to use pretrained model')
+parser.add_argument('--freeze', action='store_true', help='Whether to freeze base model')
+parser.add_argument('--lift', action='store_true', help='Whether to use LIFT')
+parser.add_argument('--temperature', type=float, default=1.0, help='Temperature for LIFT')
+parser.add_argument('--border_type', type=str, default=None, help='Border type for LIFT')
+parser.add_argument('--in_dim', type=int, default=1, help='Input dimension for LIFT')
 
 # optimization
 parser.add_argument('--num_workers', type=int, default=10, help='data loader num workers')
@@ -212,7 +214,7 @@ if FLAG_LIFT:
     if args.data.startswith('ETT'):
         args.efficient = False
 else:
-    Exp = Exp_Main
+    Exp = Exp_Main_LIFT
 
 def setup_seed(seed):
     torch.manual_seed(seed)
@@ -377,5 +379,9 @@ if __name__ == '__main__':
             exp.predict(setting, True)
         else:
             print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
-            exp.test(setting, test=1)
+            # Handle testing based on experiment type
+            if isinstance(exp, Exp_Lead):
+                exp.test(setting, test=1)
+            else:
+                exp.test(setting)
         torch.cuda.empty_cache()
