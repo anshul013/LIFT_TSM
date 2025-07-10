@@ -1,6 +1,6 @@
 
 from exp.exp_main import Exp_Main
-from models.LIFT import LIFT
+from models.LIFT import Model as LIFT
 import os
 
 import warnings
