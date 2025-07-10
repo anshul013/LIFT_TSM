@@ -7,7 +7,6 @@ import copy
 import datetime
 import time
 from exp.exp_main import Exp_Main
-from exp.exp_main_l import Exp_Main_LIFT
 from exp.exp_lead import Exp_Lead
 from data_provider import data_loader
 from settings import data_settings
@@ -213,7 +212,7 @@ if FLAG_LIFT:
     if args.data.startswith('ETT'):
         args.efficient = False
 else:
-    Exp = Exp_Main_LIFT
+    Exp = Exp_Main
 
 def setup_seed(seed):
     torch.manual_seed(seed)

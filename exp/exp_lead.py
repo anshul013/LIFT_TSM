@@ -1,12 +1,12 @@
 
-from exp.exp_main_l import Exp_Main_LIFT
+from exp.exp_main import Exp_Main
 from models import LIFT
 
 import warnings
 warnings.filterwarnings('ignore')
 
 
-class Exp_Lead(Exp_Main_LIFT):
+class Exp_Lead(Exp_Main):
     def __init__(self, args):
         super(Exp_Lead, self).__init__(args)
 
